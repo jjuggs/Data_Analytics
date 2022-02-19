@@ -1,0 +1,37 @@
+# Import tools
+import sqlite3
+import csv
+
+# Connection to database
+con = sqlite3.connect("nysesdb.sqlite")
+cur = con.cursor()
+
+# If table in database exists
+cur.executescript('''
+DROP TABLE IF EXISTS data;
+DROP TABLE IF EXISTS yymm_data;
+CREATE TABLE data (
+    date TEXT NOT NULL,
+    indices INTEGER);
+CREATE TABLE yymm_data (
+    yyyy_mm TEXT NOT NULL,
+    min_index INTEGER,
+    average_index INTEGER,
+    max_index INTEGER);
+''')
+
+# Open and read csv file and insert content into database
+a_file = open("NYSESW.csv")
+rows = csv.reader(a_file)
+cur.executemany("INSERT INTO data VALUES (?, ?)", rows)
+
+# Delete first row that was on csv ' ', dat
+cur.execute("DELETE FROM data WHERE date= '' ")
+
+# Print all data imported to database
+cur.execute("SELECT * FROM data")
+print(cur.fetchone())
+
+# Commit to memory and close connection
+con.commit()
+con.close()
